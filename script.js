@@ -1,11 +1,38 @@
-
+let activationFunctions = [
 function equivalentFunction(x = 0, isPr = false) {
     if (!isPr) {
         //y = x
         return x;
     } else {
         //y = 1;
-        return -1;
+        return 1;
+    }
+},
+function logicFunction(x = 0, isPr = false) {
+    if (!isPr) {
+        return 1/(1+Math.exp(-x));
+    } else {
+        //y = f(x)(1-f(x));
+        let fx=logicFunction(x);
+        return fx*(1-fx);
+    }
+},
+function softsignFunction(x = 0, isPr = false) {
+    if (!isPr) {
+        return x/(1+Math.abs(x));
+    } else {
+        //y = 1/((1+|x|)^2);
+        return 1/( (1+Math.abs(x)) * (1+Math.abs(x)) );
+    }
+},
+]
+function equivalentFunction(x = 0, isPr = false) {
+    if (!isPr) {
+        //y = x
+        return x;
+    } else {
+        //y = 1;
+        return 1;
     }
 }
 function logicFunction(x = 0, isPr = false) {
@@ -26,16 +53,18 @@ function softsignFunction(x = 0, isPr = false) {
     }
 }
 
-function getCoords(elem) {
+function getCoords(elem, isMessage = false) {
     let box = elem.getBoundingClientRect();
-
+    let svgBox = document.getElementById('svg').getBoundingClientRect();
+    let svgBoxTop = svgBox.top;
+    let isMessageNum = isMessage?0:1;
     return {
-        top: box.top + pageYOffset,
+        top: box.top + pageYOffset - svgBoxTop * isMessageNum,
         left: box.left + pageXOffset -7,
-        bottom: box.bottom + pageXOffset,
+        bottom: box.bottom + pageXOffset - svgBoxTop * isMessageNum,
         right: box.right + pageXOffset -8,
-        centerX: ((box.left + pageYOffset) + (box.right + pageYOffset)) / 2,
-        centerY: ((box.top + pageYOffset) + (box.bottom + pageYOffset)) / 2 - 8
+        centerX: (((box.left + pageYOffset) + (box.right + pageYOffset)) / 2),
+        centerY: (((box.top + pageYOffset) + (box.bottom + pageYOffset)) / 2 - 8) - svgBoxTop * isMessageNum
     };
 
 }
@@ -43,7 +72,7 @@ function createMessageUnder(elem, html, id) {
     let message = document.createElement('div');
     message.style.cssText = "position:absolute; color: black";
 
-    let coords = getCoords(elem);
+    let coords = getCoords(elem, true);
 
     message.style.left = coords.centerX-10 + "px";
     message.style.top = coords.centerY + "px";
@@ -57,14 +86,21 @@ function createMessageUnder(elem, html, id) {
     document.getElementById('field').appendChild( message);
 }
 
+function convertToMass(str){
+    return str.replace(/ +/g, ' ').trim().split('\n').map(function(elem){
+        return elem.split(' ').map(function(elem){
+            return +elem;
+        });
+    })
+}
 
 class Neuronet {
 
-    constructor(inputNeuronsCnt, outputNeuronsCnt, ...hiddenLayersNeuronsCnt) {
+    constructor(activationFunction, inputNeuronsCnt, outputNeuronsCnt, ...hiddenLayersNeuronsCnt) {
         this.inputNeuronsCnt = inputNeuronsCnt;
         this.outputNeuronsCnt = outputNeuronsCnt;
         this.hiddenLayersNeuronsCnt = hiddenLayersNeuronsCnt[0];
-        this.activationFunction = logicFunction;
+        this.activationFunction = activationFunction;
         this.educNumb = 0.1;
 
         this.inputLayer = new Layer();
@@ -76,7 +112,7 @@ class Neuronet {
         if (this.hiddenLayersNeuronsCnt !== undefined) {
             for (let i = 0; i < this.hiddenLayersNeuronsCnt.length; i++) {
                 let currLayer = new Layer();
-                currLayer.setActivationFunction(logicFunction);
+                currLayer.setActivationFunction(this.activationFunction);
                 currLayer.addNeurons(this.hiddenLayersNeuronsCnt[i])
                 currLayer.addDisplacementNeurone();
                 this.hidenLayers.push(currLayer);
@@ -86,7 +122,7 @@ class Neuronet {
         }
 
         this.outputLayer = new Layer();
-        this.outputLayer.setActivationFunction(logicFunction);
+        this.outputLayer.setActivationFunction(this.activationFunction);
         this.outputLayer.addNeurons(this.outputNeuronsCnt)
 
         this.connectLayers();
@@ -132,9 +168,10 @@ class Neuronet {
     }
 
     goBackward(ideal) {
-        this.calcOutputLayerErrors(ideal);
+        let error = this.calcOutputLayerErrors(ideal);
         this.calcLayersErrors(this.outputLayer.prevLayer);
         this.correctWeights();
+        return error;
     }
 
     correctWeights() {
@@ -158,11 +195,14 @@ class Neuronet {
 
     calcOutputLayerErrors(ideal){
         let neurons = this.outputLayer.neurons
+        let error = 0;
         for (let i = 0; i < neurons.length; i++) {
             //if (neurons[i].isDisplacement) {
                 neurons[i].error = - neurons[i].output + ideal[i];
+            error += neurons[i].error
             //}
         }
+        return error;
     }
 
     calcLayersErrors(layer) {
@@ -334,8 +374,6 @@ class Connection {
     // }
 }
 
-
-
 class Renderer {
 
     renderNeuronet(neuronet) {
@@ -363,9 +401,10 @@ class Renderer {
         }
 
         this.neuronetLayout.style.height = '900px'
-        this.neuronetLayout.style.width = '1800px'
+        this.neuronetLayout.style.width = '100%'
         this.neuronetLayout.style.backgroundColor = '#d7d7d7';
         this.neuronetLayout.style.display = 'flex';
+        //this.neuronetLayout.style.justifyContent = 'center';
         this.neuronetLayout.id = 'field';
         document.body.appendChild(this.neuronetLayout);
         this.renderLayers();
@@ -384,8 +423,8 @@ class Renderer {
         layerLayout.style.backgroundColor = "#d3d6c0";
         layerLayout.style.border = "1px solid black";
         layerLayout.style.width = "60px";
-        layerLayout.style.height = "530px";
-        layerLayout.style.margin = "30px";
+        layerLayout.style.height = "650px";
+        layerLayout.style.margin = "70px";
         layerLayout.style.display = 'flex';
         layerLayout.style.flexDirection = 'column';
         layerLayout.style.justifyContent = 'center';
@@ -569,20 +608,93 @@ answers = [
 
 let mytask = [0,0,1,1,1];
 
-neuronet = new Neuronet(5,2, [4,3] );
-neuronet.setActivationFunction(equivalentFunction);
+// let neuronet = new Neuronet(5,2, [4,3] );
+// neuronet.setActivationFunction(equivalentFunction);
+//
+//
+//
+// let i = 0;
+// while(i < 100) {
+//     let inputRand = Math.floor(Math.random()*taskCnt);
+//     neuronet.setInput(tasks[inputRand]);
+//     neuronet.goForward();
+//     neuronet.goBackward(answers[inputRand]);
+//     i++;
+// }
 
-renderer = new Renderer();
 
-let i = 0;
-while(i < 100000) {
-    let inputRand = Math.floor(Math.random()*taskCnt);
-    neuronet.setInput(tasks[inputRand]);
-    neuronet.goForward();
-    neuronet.goBackward(answers[inputRand]);
-    i++;
+// console.log(neuronet)
+// renderer.renderNeuronet(neuronet)
+
+let renderer = new Renderer();
+let neuronet = undefined;
+
+document.getElementById("build-btn").onclick = function(){
+    let inputNeuronsCnt = document.getElementById('input-cnt').value;
+    let outputNeuronsCnt = document.getElementById('output-cnt').value;
+    let layersNeuronsCnt = document.getElementById('neurones-layers-cnt').value.split(' ');
+    let activationFunction = document.getElementById('activation-function').value;
+    neuronet = new Neuronet(activationFunctions[activationFunction], inputNeuronsCnt,outputNeuronsCnt, layersNeuronsCnt);
+    console.log(neuronet)
+    renderer.renderNeuronet(neuronet)
 }
 
+document.getElementById('error-btn').onclick = function(e){
+    let popup = document.getElementById('popup-graphic');
+    popup.style.display = popup.style.display==='none'?'flex':'none';
+    e.target.style.backgroundColor = e.target.style.backgroundColor==='orangered'?'green':'orangered';
+}
 
-console.log(neuronet)
-renderer.renderNeuronet(neuronet)
+document.getElementById('student-btn').onclick = function(){
+    let taskCnt = document.getElementById('training-cnt').value;
+    let trainsCnt = document.getElementById('trainings-cnt').value;
+    let tasks = convertToMass(document.getElementById('training-inputs').value);
+    let answers = convertToMass(document.getElementById('training-outputs').value);
+
+    console.log(tasks)
+    console.log(answers)
+
+    let errorLog = [];
+    let maxError = 0;
+    let i = 0;
+    let error = 0;
+
+    while(i < trainsCnt) {
+        let inputRand = Math.floor(Math.random()*taskCnt);
+        neuronet.setInput(tasks[inputRand]);
+        console.log(neuronet)
+        neuronet.goForward();
+        error = neuronet.goBackward(answers[inputRand]);
+        errorLog.push(error);
+        if (error > maxError) maxError = error;
+        i++;
+    }
+
+    renderer.renderNeuronet(neuronet)
+    console.log(errorLog)
+    GraphicRenderer.setLayout(document.getElementById('popup-graphic'));
+    let data = {
+        minX: 0,
+        maxX: 1,
+        maxY: maxError,
+        groups: errorLog,
+    }
+    GraphicRenderer.renderData(data);
+}
+
+document.getElementById('user-test-btn').onclick = function(){
+    let taskCnt = 1;
+    let trainsCnt = 1;
+    let tasks = convertToMass(document.getElementById('user-input').value);
+
+    let i = 0;
+
+    while(i < trainsCnt) {
+        let inputRand = Math.floor(Math.random()*taskCnt);
+        neuronet.setInput(tasks[inputRand]);
+        neuronet.goForward();
+        i++;
+    }
+
+    renderer.renderNeuronet(neuronet)
+}

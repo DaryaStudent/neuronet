@@ -1,0 +1,54 @@
+html { overflow:  hidden; }
+
+#control {
+    display: flex;
+    flex-direction: column;
+}
+
+#control>div{
+    padding: 5px;
+    box-shadow: inset 3px 3px 10px rgba(154, 147, 140, 0.5), 3px 3px 4px rgba(255, 255, 255, 1);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    margin: 5px;
+}
+
+#control>div>div{
+    margin: 5px;
+}
+
+.settings-header{
+    background-color: darkgrey;
+    width: 100px;
+}
+
+button{
+    background-color: orangered;
+}
+
+#popup-graphic{
+
+
+}
+
+#popup-graphic {
+    border: 1px solid black;
+    width: 1000px;
+    height: 800px;
+    top: 100px;
+    left: 450px;
+    position: absolute;
+    background-color: darkgrey;
+    z-index: 999;
+    display: none;
+    justify-content: space-around;
+    align-items: flex-end;
+    flex: 1 1 auto;
+}
+
+.graphicColumn {
+    background-color: darkslategray;
+    width: 100%;
+    /*margin: 1px;*/
+}
