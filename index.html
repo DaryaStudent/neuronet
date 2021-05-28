@@ -6,12 +6,107 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
+
 <body>
-<svg id='svg' width="1" height="1" style="overflow: visible; z-index: 1; position: absolute">
-</svg>
-<iframe frameborder="0" style="border:none;width:100%;height:180px;" width="100%" height="180" src="https://music.yandex.ru/iframe/#track/49473110/6792900">Слушайте <a href='https://music.yandex.ru/album/6792900/track/49473110'>Battle Royale</a> — <a href='https://music.yandex.ru/artist/3364369'>Apashe</a> на Яндекс.Музыке</iframe>
-<iframe frameborder="0" style="border:none;width:100%;height:180px;" width="100%" height="180" src="https://music.yandex.ru/iframe/#track/35863436/4491774">Слушайте <a href='https://music.yandex.ru/album/4491774/track/35863436'>&Run</a> — <a href='https://music.yandex.ru/artist/1434314'>Sir Sly</a> на Яндекс.Музыке</iframe>
-    <script src="script.js"></script>
+
+<div id = "control">
+    <div id="neuronet-settings-wrapper">
+        <div class="settings-header">Настройки нейросети</div>
+        <div>
+            <label for="input-cnt">Кол-во входящих нейронов:</label>
+            <input type="number" id="input-cnt" value="4">
+        </div>
+        <div>
+            <label for="neurones-layers-cnt">Кол-во нейронов в слоях:</label>
+            <input type="text" id="neurones-layers-cnt" value="3 2">
+        </div>
+        <div>
+            <label for="output-cnt">Кол-во выходящих нейронов:</label>
+            <input type="number" id="output-cnt" value="1">
+        </div>
+        <div>
+            <label for="output-cnt">Функция активации:</label>
+            <select id="activation-function">
+                <option value="0">equivalent</option>
+                <option selected value="1">logic</option>
+                <option value="2">softsign</option>
+            </select>
+        </div>
+        <div>
+        <button id="build-btn">Построить</button>
+        </div>
+    </div>
+    <div id="neuronet-training-wrapper">
+        <div class="settings-header">Обучающие наборы</div>
+        <div>
+            <label for="training-cnt">Кол-во обучающих наборов:</label>
+            <input type="number" id="training-cnt" value="16">
+        </div>
+        <div>
+            <label for="training-inputs">Обучающие наборы:</label>
+            <textarea id="training-inputs" >0 0 0 0
+0 0 0 1
+0 0 1 0
+0 0 1 1
+0 1 0 0
+0 1 0 1
+0 1 1 0
+0 1 1 1
+1 0 0 0
+1 0 0 1
+1 0 1 0
+1 0 1 1
+1 1 0 0
+1 1 0 1
+1 1 1 0
+1 1 1 1</textarea>
+        </div>
+        <div>
+            <label for="input-cnt">Ответы на обучающиенаборы:</label>
+            <textarea id="training-outputs" >0
+0
+0
+0
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1</textarea>
+        </div>
+        <div>
+            <label for="trainings-cnt">Кол-во обучений:</label>
+            <input type="number" id="trainings-cnt" value="10000">
+        </div>
+        <button id="student-btn">Обучить</button>
+        <button id="error-btn">Динамика ошибок</button>
+
+    </div>
+    <div id="user-input-wrapper">
+        <div class="settings-header">Ваш входной пример:</div>
+        <div>
+            <textarea id="user-input">0 0 1 0</textarea>
+        </div>
+        <button id="user-test-btn">Решить</button>
+    </div>
+</div>
+
+<svg id='svg' width="1" height="1" style="overflow: visible; z-index: 1; position: absolute"></svg>
+
+<div id="popup-graphic">
+
+</div>
+
+<script src="script.js"></script>
+<script src="GraphicRenderer.js"></script>
 </body>
+
 </html>
